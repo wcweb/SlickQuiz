@@ -1,5 +1,15 @@
+/*!
+ * SlickQuiz jQuery Plugin
+ * http://github.com/QuickenLoans/SlickQuiz
+ *
+ * @updated March 25, 2013
+ *
+ * @author Julie Bellinson - http://www.jewlofthelotus.com
+ * @copyright (c) 2013 Quicken Loans - http://www.quickenloans.com
+ * @license MIT
+ */
+
 (function($){
-    // Setup Sexy Quiz
     $.slickQuiz = function(element, options) {
         var $element = $(element),
              element = element;
@@ -28,7 +38,7 @@
             depMsg += 'The \'disableNext\' option has been deprecated, please use \'preventUnanswered\' in it\'s place.\n\n';
         }
 
-        if (depMsg != '') {
+        if (depMsg !== '') {
             if (typeof console != 'undefined') {
                 console.warn(depMsg);
             } else {
@@ -46,7 +56,7 @@
             checker:         '#' + selector + ' .checkAnswer',
             next:            '#' + selector + ' .nextQuestion',
             back:            '#' + selector + ' .backToQuestion'
-        }
+        };
 
         var targets = {
             quizName:        '#' + selector + ' .quizName',
@@ -56,7 +66,7 @@
             quizHeader:      '#' + selector + ' .quizHeader',
             quizScore:       '#' + selector + ' .quizScore',
             quizLevel:       '#' + selector + ' .quizLevel'
-        }
+        };
 
         // Set via json option or quizJSON variable (see slickQuiz-config.js)
         var quizValues = (plugin.config.json ? plugin.config.json : typeof quizJSON != 'undefined' ? quizJSON : null);
@@ -71,7 +81,7 @@
             3: quizValues.info.level3, // 40-59%
             4: quizValues.info.level4, // 20-39%
             5: quizValues.info.level5  // 0-19%
-        }
+        };
 
         // Count the number of questions
         var questionCount = questions.length;
@@ -105,7 +115,7 @@
                                     truths++;
                                 }
                             }
-                        };
+                        }
 
                         // prepare a name for the answer inputs based on the question
                         var inputName  = 'question' + (count - 1);
@@ -133,7 +143,7 @@
                                     .append(optionLabel);
                                 answerHTML.append(answerContent);
                             }
-                        };
+                        }
 
                         // Append answers to question
                         questionHTML.append(answerHTML);
@@ -150,25 +160,25 @@
                         }
 
                         // Appends check answer / back / next question buttons
-                        if (plugin.config.backButtonText && plugin.config.backButtonText != '') {
-                            questionHTML.append('<a href="" class="button backToQuestion">' + plugin.config.backButtonText + '</a>');
+                        if (plugin.config.backButtonText && plugin.config.backButtonText !== '') {
+                            questionHTML.append('<a href="#" class="button backToQuestion">' + plugin.config.backButtonText + '</a>');
                         }
 
                         // If response messaging is disabled or hidden until the quiz is completed,
                         // make the nextQuestion button the checkAnswer button, as well
                         if (plugin.config.disableResponseMessaging || plugin.config.completionResponseMessaging) {
-                            questionHTML.append('<a href="" class="button nextQuestion checkAnswer">' + plugin.config.nextQuestionText + '</a>');
+                            questionHTML.append('<a href="#" class="button nextQuestion checkAnswer">' + plugin.config.nextQuestionText + '</a>');
                         } else {
-                            questionHTML.append('<a href="" class="button nextQuestion">' + plugin.config.nextQuestionText + '</a>');
-                            questionHTML.append('<a href="" class="button checkAnswer">' + plugin.config.checkAnswerText + '</a>');
+                            questionHTML.append('<a href="#" class="button nextQuestion">' + plugin.config.nextQuestionText + '</a>');
+                            questionHTML.append('<a href="#" class="button checkAnswer">' + plugin.config.checkAnswerText + '</a>');
                         }
 
                         // Append question & answers to quiz
                         quiz.append(questionHTML);
 
                         count++;
-                    };
-                };
+                    }
+                }
 
                 // Add the quiz content to the page
                 $(targets.quizArea).append(quiz);
@@ -206,7 +216,7 @@
                 }
 
                 // Collect the answers submitted
-                var selectedAnswers = []
+                var selectedAnswers = [];
                 answerInputs.each( function() {
                     // If we're in jQuery Mobile, grab value from nested span
                     if ($('.ui-mobile').length > 0) {
@@ -218,7 +228,7 @@
                     selectedAnswers.push(inputValue);
                 });
 
-                if (plugin.config.preventUnanswered && selectedAnswers.length == 0) {
+                if (plugin.config.preventUnanswered && selectedAnswers.length === 0) {
                     alert('You must select at least one answer.');
                     return false;
                 }
@@ -239,6 +249,7 @@
 
                         $(checkButton).hide();
                         questionLI.find('.nextQuestion').fadeIn(300);
+                        questionLI.find('.backToQuestion').fadeIn(300);
                     }
 
                     // Toggle responses based on submission
@@ -248,14 +259,19 @@
                         questionLI.find('.incorrect').fadeIn(300);
                     }
                 }
-
-                questionLI.find('.backToQuestion').fadeIn(300);
             },
 
             // Moves to the next question OR completes the quiz if on last question
             nextQuestion: function(nextButton) {
                 var currentQuestion = $($(nextButton).parents('li.question')[0]),
-                    nextQuestion    = currentQuestion.next('.question');
+                    nextQuestion    = currentQuestion.next('.question'),
+                    answerInputs    = currentQuestion.find('input:checked');
+
+                // If response messaging has been disabled or moved to completion,
+                // make sure we have an answer if we require it, let checkAnswer handle the alert messaging
+                if (plugin.config.preventUnanswered && answerInputs.length === 0) {
+                    return false;
+                }
 
                 if (nextQuestion.length) {
                     currentQuestion.fadeOut(300, function(){
@@ -277,10 +293,15 @@
 
                     questionLI.fadeOut(300, function() {
                         prevQuestion.removeClass('correctResponse');
-                        prevQuestion.find('.responses, .responses li').hide()
+                        prevQuestion.find('.responses, .responses li').hide();
                         prevQuestion.find('.answers').show();
                         prevQuestion.find('.checkAnswer').show();
-                        prevQuestion.find('.nextQuestion').hide();
+
+                        // If response messaging hasn't been disabled or moved to completion, hide the next question button
+                        // If it has been, we need nextQuestion visible so the user can move forward (there is no separate checkAnswer button)
+                        if (!plugin.config.disableResponseMessaging && !plugin.config.completionResponseMessaging) {
+                            prevQuestion.find('.nextQuestion').hide();
+                        }
 
                         if (prevQuestion.attr('id') != 'question0') {
                             prevQuestion.find('.backToQuestion').show();
@@ -323,10 +344,10 @@
                 $(targets.quizArea).fadeOut(300, function() {
                     // If response messaging is set to show upon quiz completion, show it
                     if (plugin.config.completionResponseMessaging && !plugin.config.disableResponseMessaging) {
-                        $('.questions input').prop('disabled', true);
-                        $('.questions .button, .questions .questionCount').hide();
-                        $('.questions .question, .questions .responses').show();
-                        $(targets.quizResults).append($('.questions')).fadeIn(500);
+                        $('#' + selector + ' .questions input').prop('disabled', true);
+                        $('#' + selector + ' .questions .button, #' + selector + ' .questions .questionCount').hide();
+                        $('#' + selector + ' .questions .question, #' + selector + ' .questions .responses').show();
+                        $(targets.quizResults).append($('#' + selector + ' .questions')).fadeIn(500);
                     } else {
                         $(targets.quizResults).fadeIn(500);
                     }
@@ -378,49 +399,46 @@
                 }
                 return false;
             }
-        }
+        };
 
         plugin.init = function() {
             // Setup quiz
             plugin.method.setupQuiz();
 
             // Bind "start" button
-            $(triggers.starter).bind('click', function(e) {
+            $(triggers.starter).on('click', function(e) {
                 e.preventDefault();
                 plugin.method.startQuiz(this);
             });
 
-            // Using 'live' instead of 'bind' since these triggers are generated
-            // on the fly in setupQuiz and thus won't be available on page load
-
             // Bind "submit answer" button
-            $(triggers.checker).live('click', function(e) {
+            $(triggers.checker).on('click', function(e) {
                 e.preventDefault();
                 plugin.method.checkAnswer(this);
             });
 
             // Bind "back" button
-            $(triggers.back).live('click', function(e) {
+            $(triggers.back).on('click', function(e) {
                 e.preventDefault();
                 plugin.method.backToQuestion(this);
             });
 
             // Bind "next question" button
-            $(triggers.next).live('click', function(e) {
+            $(triggers.next).on('click', function(e) {
                 e.preventDefault();
                 plugin.method.nextQuestion(this);
             });
-        }
+        };
 
         plugin.init();
-    }
+    };
 
     $.fn.slickQuiz = function(options) {
         return this.each(function() {
-            if (undefined == $(this).data('slickQuiz')) {
+            if (undefined === $(this).data('slickQuiz')) {
                 var plugin = new $.slickQuiz(this, options);
                 $(this).data('slickQuiz', plugin);
             }
         });
-    }
+    };
 })(jQuery);
