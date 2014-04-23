@@ -218,13 +218,13 @@
                         if (plugin.config.displayQuestionNumber) {
                             questionNumber += count + '. ';
                         }
-                        questionHTML.append('<h3>' + questionNumber + question.q + '</h3>');
+                        questionHTML.append('<h3>' + questionNumber + question.question + '</h3>');
 
                         // Count the number of true values
                         var truths = 0;
-                        for (i in question.a) {
-                            if (question.a.hasOwnProperty(i)) {
-                                answer = question.a[i];
+                        for (i in question.answers) {
+                            if (question.answers.hasOwnProperty(i)) {
+                                answer = question.answers[i];
                                 if (answer.correct) {
                                     truths++;
                                 }
@@ -236,8 +236,8 @@
 
                         // Get the answers
                         var answers = plugin.config.randomSortAnswers ?
-                            question.a.sort(function() { return (Math.round(Math.random())-0.5); }) :
-                            question.a;
+                            question.answers.sort(function() { return (Math.round(Math.random())-0.5); }) :
+                            question.answers;
 
                         // prepare a name for the answer inputs based on the question
                         var selectAny  = question.select_any ? question.select_any : false,
@@ -389,7 +389,7 @@
                 var questionLI    = $($(checkButton).parents(_question)[0]),
                     answerInputs  = questionLI.find('input:checked'),
                     questionIndex = parseInt(questionLI.attr('id').replace(/(question)/, ''), 10),
-                    answers       = questions[questionIndex].a,
+                    answers       = questions[questionIndex].answers,
                     selectAny     = questions[questionIndex].select_any ? questions[questionIndex].select_any : false;
 
                 // Collect the true answers needed for a correct response
